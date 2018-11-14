@@ -1,0 +1,17 @@
+asn1crypto==0.24.0
+autopep8==1.4.3
+booru==0.0.1
+certifi==2018.10.15
+cffi==1.11.5
+chardet==3.0.4
+configobj==5.0.6
+cryptography==2.4.1
+future==0.17.1
+idna==2.7
+pep8==1.7.1
+pycodestyle==2.4.0
+pycparser==2.19
+python-telegram-bot==11.1.0
+requests==2.20.1
+six==1.11.0
+urllib3==1.24.1
