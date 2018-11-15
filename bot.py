@@ -106,6 +106,7 @@ def safebooru(bot, update, args):
     if len(args) < 1:
         bot.sendMessage(update.message.chat_id, text='There are no arguments, b-baka !',
                         reply_to_message_id=update.message.message_id)
+        return
 
     tags = " ".join(args)
 
