@@ -134,12 +134,12 @@ def safebooru(bot, update, args):
 
 
 @run_async
-@check_permissions()
+@check_permissions(admin_only=True)
 def delete(bot, update):
+
     try:
-        if update.message.from_user.id == OWNER_ID or update.message.from_user.id == update.message.reply_to_message.reply_to_message.from_user.id:
-            to_delete = update.message.reply_to_message
-            to_delete.delete()
+        to_delete = update.message.reply_to_message
+        to_delete.delete()
     except Exception as e:
         logging.warning(e)
 
