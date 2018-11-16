@@ -26,7 +26,7 @@ sleeping = False
 
 
 def sendAndLog(fn, **kwargs):
-    message = fn(**kwargs)
+    message = fn(quote=True, **kwargs)
     logging.info(f"Sent message: \n {message}")
 
 
