@@ -8,6 +8,8 @@ from configobj import ConfigObj
 from telegram.ext import CommandHandler, Filters, MessageHandler, Updater
 from telegram.ext.dispatcher import run_async
 
+from json.decoder import JSONDecodeError
+
 from settings import AKARIN_TOKEN, OWNER_ID, SHUTDOWN_IMAGE, TELEGRAM_TOKEN, MANDATORY_TAGS, IGNORED_TAGS, BOORU
 
 # Enable logging
@@ -23,9 +25,14 @@ sb = br.request_manager
 sleeping = False
 
 
+def sendAndLog(fn, **kwargs):
+    message = fn(**kwargs)
+    logging.info(f"Sent message: \n {message}")
+
+
 def log(fn):
     def wrapper(bot, update, *args, **kwargs):
-        logging.info(f"Received update: {update}")
+        logging.info(f"Received update: \n {update}")
         return fn(bot, update, *args, **kwargs)
 
     return wrapper
@@ -69,7 +76,7 @@ def help(bot, update):
            "/waaai - akarin alias\n" \
            "/anilist - Anilist search"
 
-    bot.sendMessage(update.message.chat_id, text=text, disable_web_page_preview=True)
+    sendAndLog(update.message.reply_text, text=text)
 
 
 @run_async
@@ -77,8 +84,9 @@ def help(bot, update):
 def akarin(bot, update, args):
 
     if len(args) < 1:
-        bot.sendMessage(update.message.chat_id, text='わあああいーあかりんパラメータを見つけられなかった　( ≧Д≦)',
-                        reply_to_message_id=update.message.message_id)
+
+        sendAndLog(update.message.reply_text, text='わあああいーあかりんパラメータを見つけられなかった　( ≧Д≦)')
+
         return
 
     payload = {
@@ -92,29 +100,30 @@ def akarin(bot, update, args):
     r = requests.get('https://api.waa.ai/shorten', params=payload).json()
 
     if r['success']:
-        bot.sendMessage(update.message.chat_id, text=r['data']['url'], disable_web_page_preview=True,
-                        reply_to_message_id=update.message.message_id)
-
+        sendAndLog(update.message.reply_text, text=r['data']['url'], disable_web_page_preview=True)
     else:
-        bot.sendMessage(update.message.chat_id, text="”" + r['data']['error'] + '”？ えー　なにそれ、あかりんいみわかんあい ヾ( •́д•̀ ;)ﾉ',
-                        reply_to_message_id=update.message.message_id)
+        sendAndLog(update.message.reply_text, text="”" + r['data']['error'] + '”？ えー　なにそれ、あかりんいみわかんあい ヾ( •́д•̀ ;)ﾉ')
 
 
 @run_async
 @check_permissions()
 def safebooru(bot, update, args):
     if len(args) < 1:
-        bot.sendMessage(update.message.chat_id, text='There are no arguments, b-baka !',
-                        reply_to_message_id=update.message.message_id)
+        sendAndLog(update.message.reply_text, text='There are no arguments, b-baka !')
         return
 
     tags = " ".join(args)
 
-    image = sb.random(tags=tags)
+    try:
+        image = sb.random(tags=tags)
 
-    url = br.generate_image_url(image)
+        url = br.generate_image_url(image)
 
-    update.message.reply_photo(url, reply_to_message_id=update.message.message_id)
+        logging.info(f"Sending image: {image.tags}")
+
+        sendAndLog(update.message.reply_photo, photo=url)
+    except JSONDecodeError:
+        sendAndLog(update.message.reply_text, text="I-It's not like I really tried to find a result or anything...")
 
 
 @run_async
