@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
+from json.decoder import JSONDecodeError
 
 import requests
 from booru import Booru
@@ -8,9 +9,16 @@ from configobj import ConfigObj
 from telegram.ext import CommandHandler, Filters, MessageHandler, Updater
 from telegram.ext.dispatcher import run_async
 
-from json.decoder import JSONDecodeError
 
-from settings import AKARIN_TOKEN, OWNER_ID, SHUTDOWN_IMAGE, TELEGRAM_TOKEN, MANDATORY_TAGS, IGNORED_TAGS, BOORU
+config = ConfigObj("settings.ini")
+
+AKARIN_TOKEN = config['AKARIN_TOKEN']
+BOORU = config['BOORU']
+IGNORED_TAGS = config['IGNORED_TAGS']
+MANDATORY_TAGS = config['MANDATORY_TAGS']
+OWNER_ID = config['OWNER_ID']
+SHUTDOWN_IMAGE = config['SHUTDOWN_IMAGE']
+TELEGRAM_TOKEN = config['TELEGRAM_TOKEN']
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -20,7 +28,6 @@ logger = logging.getLogger(__name__)
 
 br = Booru("safebooru.org", mandatory_tags=MANDATORY_TAGS, ignored_tags=IGNORED_TAGS)
 sb = br.request_manager
-
 
 sleeping = False
 
@@ -127,6 +134,17 @@ def safebooru(bot, update, args):
 
 
 @run_async
+@check_permissions()
+def delete(bot, update):
+    try:
+        if update.message.from_user.id == OWNER_ID or update.message.from_user.id == update.message.reply_to_message.from_user.id:
+            to_delete = update.message.reply_to_message
+            to_delete.delete()
+    except Exception as e:
+        logging.warning(e)
+
+
+@run_async
 def catgirl(bot, update, args):
     args.append("cat_ears")
     safebooru(bot, update, args)
@@ -158,6 +176,8 @@ def main():
     dp.add_handler(CommandHandler("sb", safebooru, pass_args=True))
 
     dp.add_handler(CommandHandler("catgirl", catgirl, pass_args=True))
+
+    dp.add_handler(CommandHandler("delete", delete))
 
     updater.start_polling()
     updater.idle()
