@@ -137,7 +137,7 @@ def safebooru(bot, update, args):
 @check_permissions()
 def delete(bot, update):
     try:
-        if update.message.from_user.id == OWNER_ID or update.message.from_user.id == update.message.reply_to_message.from_user.id:
+        if update.message.from_user.id == OWNER_ID or update.message.from_user.id == update.message.reply_to_message.reply_to_message.from_user.id:
             to_delete = update.message.reply_to_message
             to_delete.delete()
     except Exception as e:
